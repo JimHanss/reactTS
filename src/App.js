@@ -1,120 +1,187 @@
-import {useState,useEffect} from 'react';
-import { Box, Button } from '@mui/material';
-import {ethers} from 'ethers'
-import abi from './utils/Counter.json'
+import { useState, useCallback } from "react";
+import { Box, Button, InputBase } from "@mui/material";
+import CardMedia from "@mui/material/CardMedia";
+import { makeStyles } from "@mui/styles";
+import abi from "./utils/Counter.json";
+import NFT from "./utils/NFT.json";
+import axios from "axios";
 
-const contractAddress = '0x5fbdb2315678afecb367f032d93f642f64180aa3'
-const contractABI = abi.abi
+const useStyle = makeStyles((theme) => ({
+  input: {
+    border: "1px solid #d5dae2",
+    width: "450px",
+    paddingLeft: "10px",
+    borderRadius: "4px 0 0 4px",
+    "& :focus": {
+      borderColor: "rgba(52,152,219,.5)",
+      boxShadow: "0 0 25px rgb(52 152 219 / 10%)",
+    },
+  },
+}));
+
+const contractAddress = "0x5fbdb2315678afecb367f032d93f642f64180aa3";
+const contractABI = abi.abi;
+
+const myContractAddress = "0x25C5F2FD786Ad76A74318Ea99664212D740D9451";
+const myContractABI = NFT;
 
 function App() {
-  const [count,setCount] = useState(0)
-  const [account,setAccount] = useState(null)
-  const [loading,setLoading] = useState(false)
+  const classes = useStyle();
+  const [value, setValue] = useState();
+  const [id, setId] = useState();
+  const [imgUrl, setImgUrl] = useState();
+  const [solValue, setSolValue] = useState();
 
-  const checkIfWalletIsConnected = async () => {
+  const transferNFT = useCallback(async () => {
     try {
-      const { ethereum } = window
+      const config = {
+        method: "post",
+        headers: {},
+        url: "https://eth-api-eight.vercel.app/nftDemo/safeTransferFrom",
+        data: {
+          address: value,
+        },
+      };
 
-      if (ethereum) {
-        console.log(`metamask is available`);
-        
-      } else {
-        console.log(`metamask is available`);
-      }
-
-      const accounts = await ethereum.request({
-        method: 'eth_accounts'
-      })
-
-      if (accounts.length !== 0) {
-        const account = accounts[0]
-        console.log(`found account with address`,account);
-        setAccount(account)
-      } else {
-        console.log(`no authorized account found`);
-      }
-      
+      const { data } = await axios(config);
+      alert(`success`);
     } catch (error) {
-      console.error(error);
+      console.log("error", error);
     }
-  }
-
-  useEffect(() => {
-    checkIfWalletIsConnected().then(() => {
-      getCounts()
-    })
-  },[])
+  }, [value]);
 
   const connectWallet = async () => {
     try {
-      const {ethereum} = window
+      const { ethereum } = window;
 
-      if(!ethereum) {
-        alert(`please install metamask`)
-        return 
+      if (!ethereum) {
+        alert(`please install metamask`);
+        return;
       }
 
       const accounts = await ethereum.request({
-        method: 'eth_requestAccounts'
-      })
-      console.log(accounts[0]);
-
-      setAccount(accounts[0])
+        method: "eth_requestAccounts",
+      });
     } catch (err) {
       console.error(err);
     }
-  }
+  };
 
-  const hi = async () => {
+  const getNFT = async () => {
     try {
-      const { ethereum } = window
+      const config = {
+        method: "post",
+        headers: {},
+        url: "https://eth-api-eight.vercel.app/nftDemo/getNft",
+        // url: "http://localhost:3001/nftDemo/getNft",
+        data: {
+          address: id,
+        },
+      };
 
-      if (ethereum) {
-        const provider = new ethers.providers.Web3Provider(ethereum)
-        const signer = provider.getSigner()  // signer 是执行合约的签名方
-        const CounterContract = new ethers.Contract(contractAddress, contractABI, signer)
-
-        setLoading(true)
-        let tx = await CounterContract.add() // 会返回一个交易 transaction
-        await tx.wait() // 等 add() 完场上链之后，才去获取 counts 值
-        setLoading(false)
-        await getCounts()
-      }
+      const { data } = await axios(config);
+      console.log("result", data);
+      setImgUrl(data);
     } catch (error) {
-      setLoading(false)
-      console.error(error);
+      console.log("error", error);
     }
-  }
+  };
 
-  const getCounts = async () => {
+  const transferSolNFT = useCallback(async () => {
     try {
-      const { ethereum } = window
+      const config = {
+        method: "post",
+        headers: {},
+        url: "https://eth-api-eight.vercel.app/solDemo/transfer",
+        data: {
+          address: solValue,
+        },
+      };
 
-      if (!ethereum) {
-        console.log(`ethereum object is not available`);
-        return
-      }
+      const { data } = await axios(config);
 
-        const provider = new ethers.providers.Web3Provider(ethereum)
-        const signer = provider.getSigner()  // signer 是执行合约的签名方
-        const CounterContract = new ethers.Contract(contractAddress, contractABI, signer)
-
-        const counts = await CounterContract.getCounts() // 返回的 counts 是非常大的，是个bigNumber
-        setCount(counts.toNumber()) // 所以需要 toNumber() 转换一下
+      console.log(`txhash:${data}`);
+      alert(`success!txhash:${data}`);
     } catch (error) {
-      console.error(error);
+      console.log(error);
     }
-  } 
+  }, [solValue]);
 
   return (
-    <Box display='flex' flexDirection='column' justifyContent='center' alignItems='center'>
-      <h1>Hello, Web3!</h1>
-      {account ? <><h2>{count}</h2>
-      <h3>
-        Logged in as{"  "}
-      <strong>{`${account.substring(0,4)}...${account.substring(account.length - 4)}`}</strong>
-      </h3>
-      <Button onClick={hi}>{loading ? 'loading' : 'Say Hi'}</Button></> :<Button onClick={connectWallet}>Connect Wallet</Button>  }
+    <Box
+      display="flex"
+      flexDirection="column"
+      justifyContent="center"
+      alignItems="center"
+    >
+      <h1>Ethereum</h1>
+      <Box display="flex">
+        <InputBase
+          className={classes.input}
+          onChange={(event) => {
+            setValue(event.target.value);
+          }}
+        />
+        <Button
+          onClick={transferNFT}
+          style={{
+            backgroundColor: "#77838f",
+            color: "white",
+            borderRadius: "0 4px 4px 0",
+          }}
+        >
+          Transfer
+        </Button>
+      </Box>
+      <Box display="flex" mt="50px" mb="50px">
+        <InputBase
+          className={classes.input}
+          onChange={(event) => {
+            setId(event.target.value);
+          }}
+        />
+        <Button
+          onClick={getNFT}
+          style={{
+            backgroundColor: "#77838f",
+            color: "white",
+            borderRadius: "0 4px 4px 0",
+          }}
+        >
+          getNFT
+        </Button>
+      </Box>
+      {Array.isArray(imgUrl) &&
+        imgUrl.map((item, index) => (
+          <CardMedia
+            component="img"
+            height="480px"
+            width="480px"
+            image={item}
+            alt=""
+            key={index}
+          />
+        ))}
+
+      <h1>Solana</h1>
+      <Box display="flex">
+        <InputBase
+          className={classes.input}
+          onChange={(event) => {
+            setSolValue(event.target.value);
+          }}
+        />
+        <Button
+          onClick={transferSolNFT}
+          style={{
+            backgroundColor: "#77838f",
+            color: "white",
+            borderRadius: "0 4px 4px 0",
+          }}
+        >
+          Transfer
+        </Button>
+      </Box>
     </Box>
   );
 }
