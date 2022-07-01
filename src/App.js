@@ -1,10 +1,9 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Box, Button, InputBase } from "@mui/material";
-import CardMedia from "@mui/material/CardMedia";
 import { makeStyles } from "@mui/styles";
-import abi from "./utils/Counter.json";
-import NFT from "./utils/NFT.json";
 import axios from "axios";
+import NftList from "./components/NftList";
+import useTab from "./utils/useTab";
 
 const useStyle = makeStyles((theme) => ({
   input: {
@@ -19,27 +18,27 @@ const useStyle = makeStyles((theme) => ({
   },
 }));
 
-const contractAddress = "0x5fbdb2315678afecb367f032d93f642f64180aa3";
-const contractABI = abi.abi;
-
-const myContractAddress = "0x25C5F2FD786Ad76A74318Ea99664212D740D9451";
-const myContractABI = NFT;
+const baseUrl = "https://eth-api-eight.vercel.app";
+const urlModule = {
+  Ethereum: "ethDemo",
+  Solana: "solDemo",
+};
 
 function App() {
   const classes = useStyle();
-  const [value, setValue] = useState();
-  const [id, setId] = useState();
-  const [imgUrl, setImgUrl] = useState();
-  const [solValue, setSolValue] = useState();
+  const [tab, Tab] = useTab();
+  const [nftData, setNftData] = useState();
+  const [transferValue, setTransferValue] = useState("");
+  const [checkValue, setCheckValue] = useState("");
 
   const transferNFT = useCallback(async () => {
     try {
       const config = {
         method: "post",
         headers: {},
-        url: "https://eth-api-eight.vercel.app/nftDemo/safeTransferFrom",
+        url: `${baseUrl}/${urlModule[tab]}/safeTransferFrom`,
         data: {
-          address: value,
+          address: transferValue,
         },
       };
 
@@ -48,64 +47,76 @@ function App() {
     } catch (error) {
       console.log("error", error);
     }
-  }, [value]);
+  }, [transferValue]);
 
-  const connectWallet = async () => {
-    try {
-      const { ethereum } = window;
+  // const connectWallet = async () => {
+  //   try {
+  //     const { ethereum } = window;
 
-      if (!ethereum) {
-        alert(`please install metamask`);
-        return;
-      }
+  //     if (!ethereum) {
+  //       alert(`please install metamask`);
+  //       return;
+  //     }
 
-      const accounts = await ethereum.request({
-        method: "eth_requestAccounts",
-      });
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  //     const accounts = await ethereum.request({
+  //       method: "eth_requestAccounts",
+  //     });
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+  // };
 
   const getNFT = async () => {
     try {
       const config = {
         method: "post",
         headers: {},
-        url: "https://eth-api-eight.vercel.app/nftDemo/getNft",
-        // url: "http://localhost:3001/nftDemo/getNft",
+        url: `${baseUrl}/${urlModule[tab]}/getNft`,
         data: {
-          address: id,
+          address: checkValue,
         },
       };
 
       const { data } = await axios(config);
-      console.log("result", data);
-      setImgUrl(data);
+      const nfts = data.map((item) => {
+        return {
+          img: item.uri,
+          title: item.name,
+          address: item.address,
+        };
+      });
+      console.log("result", nfts);
+      setNftData(nfts);
     } catch (error) {
       console.log("error", error);
     }
   };
 
-  const transferSolNFT = useCallback(async () => {
-    try {
-      const config = {
-        method: "post",
-        headers: {},
-        url: "https://eth-api-eight.vercel.app/solDemo/transfer",
-        data: {
-          address: solValue,
-        },
-      };
+  // const transferSolNFT = useCallback(async () => {
+  //   try {
+  //     const config = {
+  //       method: "post",
+  //       headers: {},
+  //       url: "https://eth-api-eight.vercel.app/solDemo/transfer",
+  //       data: {
+  //         address: solValue,
+  //       },
+  //     };
 
-      const { data } = await axios(config);
+  //     const { data } = await axios(config);
 
-      console.log(`txhash:${data}`);
-      alert(`success!txhash:${data}`);
-    } catch (error) {
-      console.log(error);
-    }
-  }, [solValue]);
+  //     console.log(`txhash:${data}`);
+  //     alert(`success!txhash:${data}`);
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // }, [solValue]);
+
+  useEffect(() => {
+    setNftData(undefined);
+    setTransferValue("");
+    setCheckValue("");
+  }, [tab]);
 
   return (
     <Box
@@ -114,12 +125,14 @@ function App() {
       justifyContent="center"
       alignItems="center"
     >
-      <h1>Ethereum</h1>
+      {Tab}
+      <h1>{tab}</h1>
       <Box display="flex">
         <InputBase
           className={classes.input}
+          value={transferValue}
           onChange={(event) => {
-            setValue(event.target.value);
+            setTransferValue(event.target.value);
           }}
         />
         <Button
@@ -128,6 +141,7 @@ function App() {
             backgroundColor: "#77838f",
             color: "white",
             borderRadius: "0 4px 4px 0",
+            width: "100px",
           }}
         >
           Transfer
@@ -136,8 +150,9 @@ function App() {
       <Box display="flex" mt="50px" mb="50px">
         <InputBase
           className={classes.input}
+          value={checkValue}
           onChange={(event) => {
-            setId(event.target.value);
+            setCheckValue(event.target.value);
           }}
         />
         <Button
@@ -146,42 +161,79 @@ function App() {
             backgroundColor: "#77838f",
             color: "white",
             borderRadius: "0 4px 4px 0",
+            width: "100px",
           }}
         >
           getNFT
         </Button>
       </Box>
-      {Array.isArray(imgUrl) &&
-        imgUrl.map((item, index) => (
-          <CardMedia
-            component="img"
-            height="480px"
-            width="480px"
-            image={item}
-            alt=""
-            key={index}
-          />
-        ))}
-
-      <h1>Solana</h1>
-      <Box display="flex">
-        <InputBase
-          className={classes.input}
-          onChange={(event) => {
-            setSolValue(event.target.value);
-          }}
-        />
-        <Button
-          onClick={transferSolNFT}
-          style={{
-            backgroundColor: "#77838f",
-            color: "white",
-            borderRadius: "0 4px 4px 0",
-          }}
-        >
-          Transfer
-        </Button>
-      </Box>
+      {Array.isArray(nftData) && <NftList data={nftData} />}
+      {/* {tab === "Ethereum" ? (
+        <>
+          <h1>Ethereum</h1>
+          <Box display="flex">
+            <InputBase
+              className={classes.input}
+              onChange={(event) => {
+                setValue(event.target.value);
+              }}
+            />
+            <Button
+              onClick={transferNFT}
+              style={{
+                backgroundColor: "#77838f",
+                color: "white",
+                borderRadius: "0 4px 4px 0",
+                width: "100px",
+              }}
+            >
+              Transfer
+            </Button>
+          </Box>
+          <Box display="flex" mt="50px" mb="50px">
+            <InputBase
+              className={classes.input}
+              onChange={(event) => {
+                setId(event.target.value);
+              }}
+            />
+            <Button
+              onClick={getNFT}
+              style={{
+                backgroundColor: "#77838f",
+                color: "white",
+                borderRadius: "0 4px 4px 0",
+                width: "100px",
+              }}
+            >
+              getNFT
+            </Button>
+          </Box>
+          {Array.isArray(imgUrl) && <NftList data={imgUrl} />}
+        </>
+      ) : (
+        <>
+          <h1>Solana</h1>
+          <Box display="flex">
+            <InputBase
+              className={classes.input}
+              onChange={(event) => {
+                setSolValue(event.target.value);
+              }}
+            />
+            <Button
+              onClick={transferSolNFT}
+              style={{
+                backgroundColor: "#77838f",
+                color: "white",
+                borderRadius: "0 4px 4px 0",
+              }}
+            >
+              Transfer
+            </Button>
+          </Box>
+        </>
+      )} */}
     </Box>
   );
 }
