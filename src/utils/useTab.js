@@ -11,14 +11,16 @@ export default function useTab() {
 
   return [
     alignment,
-    <ToggleButtonGroup
-      color="primary"
-      value={alignment}
-      exclusive
-      onChange={handleChange}
-    >
-      <ToggleButton value="Ethereum">Ethereum</ToggleButton>
-      <ToggleButton value="Solana">Solana</ToggleButton>
-    </ToggleButtonGroup>,
+    () => (
+      <ToggleButtonGroup
+        color="primary"
+        value={alignment}
+        exclusive
+        onChange={handleChange}
+      >
+        <ToggleButton value="Ethereum">Ethereum</ToggleButton>
+        <ToggleButton value="Solana">Solana</ToggleButton>
+      </ToggleButtonGroup>
+    ),
   ];
 }

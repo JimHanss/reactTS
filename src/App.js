@@ -125,7 +125,7 @@ function App() {
       justifyContent="center"
       alignItems="center"
     >
-      {Tab}
+      <Tab />
       <h1>{tab}</h1>
       <Box display="flex">
         <InputBase
@@ -168,72 +168,6 @@ function App() {
         </Button>
       </Box>
       {Array.isArray(nftData) && <NftList data={nftData} />}
-      {/* {tab === "Ethereum" ? (
-        <>
-          <h1>Ethereum</h1>
-          <Box display="flex">
-            <InputBase
-              className={classes.input}
-              onChange={(event) => {
-                setValue(event.target.value);
-              }}
-            />
-            <Button
-              onClick={transferNFT}
-              style={{
-                backgroundColor: "#77838f",
-                color: "white",
-                borderRadius: "0 4px 4px 0",
-                width: "100px",
-              }}
-            >
-              Transfer
-            </Button>
-          </Box>
-          <Box display="flex" mt="50px" mb="50px">
-            <InputBase
-              className={classes.input}
-              onChange={(event) => {
-                setId(event.target.value);
-              }}
-            />
-            <Button
-              onClick={getNFT}
-              style={{
-                backgroundColor: "#77838f",
-                color: "white",
-                borderRadius: "0 4px 4px 0",
-                width: "100px",
-              }}
-            >
-              getNFT
-            </Button>
-          </Box>
-          {Array.isArray(imgUrl) && <NftList data={imgUrl} />}
-        </>
-      ) : (
-        <>
-          <h1>Solana</h1>
-          <Box display="flex">
-            <InputBase
-              className={classes.input}
-              onChange={(event) => {
-                setSolValue(event.target.value);
-              }}
-            />
-            <Button
-              onClick={transferSolNFT}
-              style={{
-                backgroundColor: "#77838f",
-                color: "white",
-                borderRadius: "0 4px 4px 0",
-              }}
-            >
-              Transfer
-            </Button>
-          </Box>
-        </>
-      )} */}
     </Box>
   );
 }
